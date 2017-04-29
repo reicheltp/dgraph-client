@@ -11,6 +11,7 @@
     "babel-jest": "^19.0.0",
     "babel-preset-env": "^1.4.0",
     "babel-preset-flow": "^6.23.0",
+    "babel-preset-stage-0": "^6.24.1",
     "flow-bin": "^0.44.2",
     "jest": "^19.0.2"
   },
@@ -19,7 +20,8 @@
     "test:watch": "jest --watch",
     "build": "babel src -d lib"
   },
-  "jest": {
-    "transform": {"^.+\\.js$": "<rootDir>/node_modules/babel-jest"}
+  "dependencies": {
+    "grpc": "^1.2.4",
+    "wkx": "^0.4.1"
   }
 }

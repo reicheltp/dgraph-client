@@ -1,0 +1,10 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`client can run a query 1`] = `
+Object {
+  "me": Object {
+    "name": "Paul Reichelt",
+    "size": "1.85",
+  },
+}
+`;
