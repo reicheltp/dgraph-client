@@ -1,8 +1,10 @@
 /* @flow */
 
 import grpc from 'grpc';
-import { graphp } from './protos';
+import protos from './protos';
 import { nodeToObject, toSetMutation } from './converter';
+
+const {graphp} = protos;
 
 /**
  * A dgraph gRPC client

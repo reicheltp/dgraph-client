@@ -1,6 +1,6 @@
 {
   "name": "dgraph-client",
-  "version": "0.1.10",
+  "version": "0.1.14",
   "description": "NodeJS Client for dgraph",
   "main": "./lib/index.js",
   "repository": "http://github.com/reicheltp/dgraph-client",

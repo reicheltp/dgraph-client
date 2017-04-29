@@ -1,9 +1,11 @@
 /* @flow */
-import {
+import protos from './protos';
+import wkx from 'wkx';
+
+const {
   graphp,
   typesp
-} from './protos';
-import wkx from 'wkx';
+} = protos;
 
 export function setPropertyValue(nquad, value) {
   switch (typeof value) {
