@@ -20,11 +20,10 @@ class DgraphClient {
     }
 
     this.dgraph = new graphp.Dgraph(url, credentials);
-    this.run = this.run.bind(this);
   }
 
   /**
-   * Run a request against dgraph and get raw response
+   * Run a DgraphClient.Request against dgraph and get raw response
    * @param request
    * @returns {Promise}
    */
@@ -50,6 +49,11 @@ class DgraphClient {
     return this.run(request).then(response => nodeToObject(response.n[0]));
   }
 
+  /**
+   * Set mutation against dgraph
+   * @param object
+   * @returns {Promise.<*>}
+   */
   async set(object) {
     let request = new graphp.Request();
 
@@ -61,7 +65,7 @@ class DgraphClient {
     for(let obj of map){
       if(obj.__tmpId){
         obj._uid_ = response.AssignedUids[obj.__tmpId];
-        obj.__tmpId = undefined;
+        delete obj.__tmpId;
       }
     }
 
@@ -70,5 +74,6 @@ class DgraphClient {
 }
 
 DgraphClient.Request = graphp.Request;
+DgraphClient.Mutation = graphp.Mutation;
 
 export default DgraphClient;

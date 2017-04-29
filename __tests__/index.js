@@ -23,4 +23,20 @@ describe('client', () => {
     expect(response).toBe(me);
   });
 
+  it('can set and query all the types', async () => {
+    let client = new DgraphClient('localhost:8080');
+
+    let obj = {
+      str: "String Value",
+      num: 1.23456,
+      date: Date.now(),
+      geo: {type: 'Point', coordinates:[13.1234, 52.1234]},
+    }
+
+    await client.set(obj);
+    let query = `query { obj(id:${obj._uid_}) { _uid_, str, num, date, geo }}`;
+    let response = await client.query(query);
+
+    expect(response.obj).toEqual(obj);
+  });
 });

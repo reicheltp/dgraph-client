@@ -26,6 +26,9 @@ export function setPropertyValue(nquad, value) {
         nquad.objectType = typesp.Posting.ValType.GEO;
         let wkb = wkx.Geometry.parseGeoJSON(value).toWkb();
         nquad.objectValue = new graphp.Value().set('geo_val', wkb);
+      } else if (value instanceof Date){
+        nquad.objectType = typesp.Posting.ValType.DATETIME;
+        nquad.objectValue = new graphp.Value().set('datetime_val', value.toISOString())
       }
       break;
   }
@@ -68,11 +71,33 @@ export function toSetMutation(object, map = []){
 }
 
 export function getPropertyValue(prop) {
-  return prop.value[prop.value.val];
+  switch (prop.value.val){
+    case 'default_val':
+    case 'str_val':
+    case 'bool_val':
+    case 'double_val':
+    case 'int_val':
+      return prop.value[prop.value.val];
+    case 'geo_val':
+      return wkx.Geometry.parse(prop.value.geo_val).toGeoJSON();
+    case 'date_val':
+    case 'datetime_val':
+      return Date.parse(prop.value[prop.value.val]);
+    case 'bytes_val':
+    case 'password_val':
+    default:
+      return undefined;
+  }
 }
 
 export function nodeToObject(node) {
   let obj = {};
+  if(node.uid && node.uid > 0){
+    obj._uid_ = node.uid;
+  }
+  if(node.xid){
+    obj._xid_ = node.xid;
+  }
   if (node.children) {
     for (let child of node.children) {
       obj[child.attribute] = nodeToObject(child);

@@ -2,10 +2,11 @@
   "name": "dgraph-client",
   "version": "0.7.5",
   "description": "NodeJS Client for dgraph",
-  "main": "lib/index.js",
+  "main": "index.js",
   "repository": "http://github.com/reicheltp/dgraph-client",
   "author": "Paul Reichelt <reicheltp@outlook.com>",
   "license": "MIT",
+  "files": [ "lib/" ],
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-jest": "^19.0.0",
