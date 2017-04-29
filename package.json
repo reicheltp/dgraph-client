@@ -1,13 +1,14 @@
 {
   "name": "dgraph-client",
-  "version": "0.1.3",
+  "version": "0.1.9",
   "description": "NodeJS Client for dgraph",
-  "main": "index.js",
+  "main": "./lib/index.js",
   "repository": "http://github.com/reicheltp/dgraph-client",
   "author": "Paul Reichelt <reicheltp@outlook.com>",
   "license": "MIT",
   "files": [
-    "lib/"
+    "lib",
+    "update-protos.sh"
   ],
   "devDependencies": {
     "babel-cli": "^6.24.1",
@@ -22,7 +23,7 @@
     "test": "jest --coverage",
     "test:watch": "jest --watch",
     "build": "babel src -d lib",
-    "install": "./update-protos",
+    "install": "./update-protos.sh",
     "prepublish": "yarn run build"
   },
   "dependencies": {

@@ -14,8 +14,8 @@ class DgraphClient {
    * @param url
    * @param credentials (optional)
    */
-  constructor(url, credentials){
-    if(!credentials){
+  constructor(url, credentials) {
+    if (!credentials) {
       credentials = grpc.credentials.createInsecure();
     }
 
@@ -27,10 +27,10 @@ class DgraphClient {
    * @param request
    * @returns {Promise}
    */
-  run(request){
+  run(request) {
     return new Promise((res, rej) => {
       this.dgraph.run(request, (err, response) => {
-        if(err){
+        if (err) {
           rej(err);
         } else {
           res(response);
@@ -54,22 +54,23 @@ class DgraphClient {
    * @param object
    * @returns {Promise.<*>}
    */
-  async set(object) {
+  set(object) {
     let request = new graphp.Request();
 
     let map = [];
     request.mutation = toSetMutation(object, map);
 
-    let response = await this.run(request);
+    return this.run(request)
+      .then(response => {
+        for (let obj of map) {
+          if (obj.__tmpId) {
+            obj._uid_ = response.AssignedUids[obj.__tmpId];
+            delete obj.__tmpId;
+          }
+        }
 
-    for(let obj of map){
-      if(obj.__tmpId){
-        obj._uid_ = response.AssignedUids[obj.__tmpId];
-        delete obj.__tmpId;
-      }
-    }
-
-    return object;
+        return object;
+      });
   }
 }
 
