@@ -1,12 +1,14 @@
 {
   "name": "dgraph-client",
-  "version": "0.7.5",
+  "version": "0.1.2",
   "description": "NodeJS Client for dgraph",
   "main": "index.js",
   "repository": "http://github.com/reicheltp/dgraph-client",
   "author": "Paul Reichelt <reicheltp@outlook.com>",
   "license": "MIT",
-  "files": [ "lib/" ],
+  "files": [
+    "lib/"
+  ],
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-jest": "^19.0.0",
@@ -19,7 +21,9 @@
   "scripts": {
     "test": "jest --coverage",
     "test:watch": "jest --watch",
-    "build": "babel src -d lib"
+    "build": "babel src -d lib",
+    "install": "./update-protos",
+    "prepublish": "yarn run build"
   },
   "dependencies": {
     "grpc": "^1.2.4",
