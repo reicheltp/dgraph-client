@@ -1,114 +1,121 @@
-/* @flow */
-import protos from './protos';
-import wkx from 'wkx';
+// @flow
+import protos from './protos'
+import wkx from 'wkx'
 
-const {
-  graphp,
-  typesp
-} = protos;
-
-export function setPropertyValue(nquad, value) {
+export function setPropertyValue (nquad: protos.NQuad, value: any) {
   switch (typeof value) {
     case 'string':
-      nquad.objectType = typesp.Posting.ValType.STRING;
-      nquad.objectValue = new graphp.Value().set('str_val', value);
-      break;
+      nquad.objectType = protos.Posting.ValType.STRING
+      nquad.objectValue = new protos.Value().set('str_val', value)
+      break
     case 'number':
-      nquad.objectType = typesp.Posting.ValType.FLOAT;
-      nquad.objectValue = new graphp.Value().set('double_val', value);
-      break;
+      nquad.objectType = protos.Posting.ValType.FLOAT
+      nquad.objectValue = new protos.Value().set('double_val', value)
+      break
     case 'boolean':
-      nquad.objectType = typesp.Posting.ValType.BOOL;
-      nquad.objectValue = new graphp.Value().set('bool_val', value);
-      break;
+      nquad.objectType = protos.Posting.ValType.BOOL
+      nquad.objectValue = new protos.Value().set('bool_val', value)
+      break
     case 'object':
       // GEO JSON
-      if((value.type === 'Point' || value.type === 'Polygon')
-        && value.coordinates.constructor === Array){
-        nquad.objectType = typesp.Posting.ValType.GEO;
-        let wkb = wkx.Geometry.parseGeoJSON(value).toWkb();
-        nquad.objectValue = new graphp.Value().set('geo_val', wkb);
-      } else if (value instanceof Date){
-        nquad.objectType = typesp.Posting.ValType.DATETIME;
-        nquad.objectValue = new graphp.Value().set('datetime_val', value.toISOString())
+      if ((value.type === 'Point' || value.type === 'Polygon') &&
+        value.coordinates.constructor === Array) {
+        nquad.objectType = protos.Posting.ValType.GEO
+        let wkb = wkx.Geometry.parseGeoJSON(value).toWkb()
+        nquad.objectValue = new protos.Value().set('geo_val', wkb)
+      } else if (value instanceof Date) {
+        // Send the time as ISO 8061 and let dgraph parse it
+        // TODO: #33 Use binary format and datetime_val
+        nquad.objectType = protos.Posting.ValType.STRING
+        nquad.objectValue = new protos.Value().set('str_val', value.toISOString())
       }
-      break;
+      break
   }
 }
 
-export function toSetMutation(object, map = []){
-  let mutation = new graphp.Mutation();
+export function toSetMutation (object: {}, map: {}[]) {
+  let mutation = new protos.Mutation()
 
-  function itterObj(obj, map, counter = 0) {
-    if(map.includes(obj)){
-      return obj._uid_ || obj.__tmpId;
+  function itterObj (obj, map, counter = 0) {
+    if (map.includes(obj)) {
+      // $FlowFixMe
+      return obj['_uid_'] || obj.__tmpId
     }
 
-    let id = obj._uid_ || '_:' + (obj.__tmpId = 'tmp' + counter);
-    map.push(obj);
+    // $FlowFixMe
+    let id = obj['_uid_'] || '_:' + (obj.__tmpId = 'tmp' + counter)
+    map.push(obj)
 
     for (let key in obj) {
-      if (!obj.hasOwnProperty(key) || key === '_uid_' || key === '__tmpId')
-        continue;
+      if (!Object.prototype.hasOwnProperty.call(obj, key) || key === '_uid_' || key === '__tmpId') { continue }
 
-      let nquad = new graphp.NQuad();
-      nquad.subject = id;
-      nquad.predicate = key;
+      let nquad = new protos.NQuad()
+      nquad.subject = id
+      nquad.predicate = key
 
-      let value = obj[key];
-      setPropertyValue(nquad, value);
+      let value = obj[key]
+      setPropertyValue(nquad, value)
 
       if (nquad.objectValue === null && typeof value === 'object') {
-        nquad.objectId = itterObj(value, map, counter + 1);
+        nquad.objectId = itterObj(value, map, counter + 1)
       }
 
-      mutation.set.push(nquad);
+      mutation.set.push(nquad)
     }
 
-    return id;
+    return id
   }
-  itterObj(object, map);
 
-  return mutation;
+  itterObj(object, map)
+
+  return mutation
 }
 
-export function getPropertyValue(prop) {
-  switch (prop.value.val){
+const ISO_8601 = /^\d{4}(-\d\d(-\d\d(T\d\d:\d\d(:\d\d)?(\.\d+)?(([+-]\d\d:\d\d)|Z)?)?)?)?$/
+
+export function getPropertyValue (prop: protos.Property) {
+  switch (prop.value.val) {
     case 'default_val':
-    case 'str_val':
     case 'bool_val':
     case 'double_val':
     case 'int_val':
-      return prop.value[prop.value.val];
+    case 'uid_val':
+      return prop.value[prop.value.val]
+    case 'str_val':
+      // TODO: #33 Use binary format and datetime_val otherwise dates are marked as string
+      let val = prop.value[prop.value.val]
+      if (val.match(ISO_8601)) {
+        return new Date(val)
+      }
+      return val
     case 'geo_val':
-      return wkx.Geometry.parse(prop.value.geo_val).toGeoJSON();
+      return wkx.Geometry.parse(prop.value.geo_val).toGeoJSON()
     case 'date_val':
     case 'datetime_val':
-      return Date.parse(prop.value[prop.value.val]);
+      throw Error('See #33. We do not support binary datetime for now.')
     case 'bytes_val':
     case 'password_val':
     default:
-      return undefined;
+      console.log(`undefined prop: ${prop.value.val}:${prop.value[prop.value.val]}`)
+      return undefined
   }
 }
 
-export function nodeToObject(node) {
-  let obj = {};
-  if(node.uid && node.uid > 0){
-    obj._uid_ = node.uid;
-  }
-  if(node.xid){
-    obj._xid_ = node.xid;
-  }
+export function nodeToObject (node: protos.Node) {
+  let obj = {}
   if (node.children) {
     for (let child of node.children) {
-      obj[child.attribute] = nodeToObject(child);
+      if (obj[child.attribute] === undefined) {
+        obj[child.attribute] = [nodeToObject(child)]
+      } else {
+        obj[child.attribute].push(nodeToObject(child))
+      }
     }
   }
   if (node.properties) {
     for (let prop of node.properties) {
-      obj[prop.prop] = getPropertyValue(prop);
+      obj[prop.prop] = getPropertyValue(prop)
     }
   }
-  return obj;
+  return obj
 }

@@ -1,3 +1,23 @@
 {
-  "presets": ["env", "flow", "stage-0"]
+  "env": {
+    "test": {
+      "presets": [
+        "env",
+        "flow",
+        "stage-0"
+      ]
+    },
+    "development": {
+      "presets": [
+        [
+          "env",
+          {
+            "modules": false
+          }
+        ],
+        "flow",
+        "stage-0"
+      ]
+    }
+  }
 }

@@ -1,27 +1,26 @@
-/* @flow */
+// @flow
 
-import grpc from 'grpc';
-import protos from './protos';
-import { nodeToObject, toSetMutation } from './converter';
-
-const {graphp} = protos;
+import grpc from 'grpc'
+import protos from './protos'
+import { nodeToObject, toSetMutation } from './converter'
 
 /**
  * A dgraph gRPC client
  */
 class DgraphClient {
+  dgraph: protos.Dgraph
 
   /**
    * create new client
-   * @param url
+   * @param {string} url
    * @param credentials (optional)
    */
-  constructor(url, credentials) {
+  constructor (url: string, credentials: any = undefined) {
     if (!credentials) {
-      credentials = grpc.credentials.createInsecure();
+      credentials = grpc.credentials.createInsecure()
     }
 
-    this.dgraph = new graphp.Dgraph(url, credentials);
+    this.dgraph = new protos.Dgraph(url, credentials)
   }
 
   /**
@@ -29,26 +28,26 @@ class DgraphClient {
    * @param request
    * @returns {Promise}
    */
-  run(request) {
-    return new Promise((res, rej) => {
+  run (request: any) {
+    return new Promise((resolve, reject) => {
       this.dgraph.run(request, (err, response) => {
         if (err) {
-          rej(err);
+          reject(err)
         } else {
-          res(response);
+          resolve(response)
         }
-      });
-    });
+      })
+    })
   }
 
   /**
    * Run a query against dgraph
    * @param query
    */
-  query(query) {
-    let request = new graphp.Request();
-    request.query = query;
-    return this.run(request).then(response => nodeToObject(response.n[0]));
+  query (query: string): Promise<Object> {
+    let request = new protos.Request()
+    request.query = query
+    return this.run(request).then(response => nodeToObject(response.n[0]))
   }
 
   /**
@@ -56,27 +55,25 @@ class DgraphClient {
    * @param object
    * @returns {Promise.<*>}
    */
-  set(object) {
-    let request = new graphp.Request();
+  set<T: Object> (object: T): Promise<T & {id: string}> {
+    let request = new protos.Request()
 
-    let map = [];
-    request.mutation = toSetMutation(object, map);
+    let map = []
+    request.mutation = toSetMutation(object, map)
 
     return this.run(request)
       .then(response => {
         for (let obj of map) {
           if (obj.__tmpId) {
-            obj._uid_ = response.AssignedUids[obj.__tmpId];
-            delete obj.__tmpId;
+            obj['_uid_'] = response.AssignedUids[obj.__tmpId]
+            // $FlowFixMe
+            delete obj.__tmpId
           }
         }
 
-        return object;
-      });
+        return object
+      })
   }
 }
 
-DgraphClient.Request = graphp.Request;
-DgraphClient.Mutation = graphp.Mutation;
-
-export default DgraphClient;
+export default DgraphClient

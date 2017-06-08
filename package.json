@@ -1,6 +1,6 @@
 {
   "name": "dgraph-client",
-  "version": "0.1.14",
+  "version": "0.2.0",
   "description": "NodeJS Client for dgraph",
   "main": "./lib/index.js",
   "repository": "http://github.com/reicheltp/dgraph-client",
@@ -13,16 +13,19 @@
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-jest": "^19.0.0",
+    "babel-plugin-external-helpers": "^6.22.0",
     "babel-preset-env": "^1.4.0",
     "babel-preset-flow": "^6.23.0",
     "babel-preset-stage-0": "^6.24.1",
     "flow-bin": "^0.44.2",
-    "jest": "^19.0.2"
+    "jest": "^19.0.2",
+    "rollup": "^0.42.0",
+    "rollup-plugin-babel": "^2.7.1"
   },
   "scripts": {
     "test": "jest --coverage",
     "test:watch": "jest --watch",
-    "build": "babel src -d lib",
+    "build": "rollup -c",
     "install": "./update-protos.sh",
     "prepublish": "yarn run build"
   },
