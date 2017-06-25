@@ -73,10 +73,22 @@ export function toSetMutation (object: {}, map: {}[]) {
       setPropertyValue(nquad, value)
 
       if (nquad.objectValue === null && typeof value === 'object') {
-        nquad.objectId = itterObj(value, map, counter + 1)
+        if (Array.isArray(value)) {
+          for (let idx = 0; idx < value.length; idx += 1) {
+            let child = value[idx]
+            let ngChild = new protos.NQuad()
+            nqChild.subject = id
+            nqChild.predicate = key
+            nqChild.objectId = itterObj(child, map, counter + 1)
+            mutation.set.push(nqChild)
+          }
+        } else {
+          nquad.objectId = itterObj(value, map, counter + 1)
+          mutation.set.push(nquad)
+        }
+      } else {
+        mutation.set.push(nquad)
       }
-
-      mutation.set.push(nquad)
     }
 
     return id
@@ -105,9 +117,8 @@ export function getPropertyValue (prop: protos.Property) {
       } catch (err) {
         try {
           // Maybe a geojson so replace ' with " that we can deserialize it
-          return JSON.parse(val.replace(/'/g, "\""))
-        } catch (err) {
-        }
+          return JSON.parse(val.replace(/'/g, '"'))
+        } catch (err) {}
 
         // obviously a plain string
         return val
