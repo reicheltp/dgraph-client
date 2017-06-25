@@ -30,8 +30,7 @@ service Worker {
 	rpc Echo (Payload)             returns (Payload) {}
 
 	// Data serving RPCs.
-	rpc AssignUids (Num)                 returns (AssignedIds) {}
-	rpc GetUids(Num)                     returns (AssignedIds) {}
+	rpc AssignUids (Num)                 returns (List) {}
 	rpc Mutate (Mutations)               returns (Payload) {}
 	rpc ServeTask (Query)                returns (Result) {}
 	rpc PredicateAndSchemaData (stream GroupKeys) returns (stream KV) {}

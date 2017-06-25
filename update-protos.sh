@@ -8,6 +8,6 @@ rm ./protos/*
 
 for proto in "${protos[@]}"
 do
-    curl -s "https://raw.githubusercontent.com/dgraph-io/dgraph/master/protos/$proto.proto" \
+    curl -s "https://raw.githubusercontent.com/dgraph-io/dgraph/release/v0.7.7/protos/$proto.proto" \
         > "./protos/$proto.proto"
 done

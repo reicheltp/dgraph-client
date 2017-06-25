@@ -44,10 +44,16 @@ class DgraphClient {
    * Run a query against dgraph
    * @param query
    */
-  query (query: string): Promise<Object> {
+  query (query: string, debug = false): Promise<Object> {
     let request = new protos.Request()
     request.query = query
-    return this.run(request).then(response => nodeToObject(response.n[0]))
+
+    debug && console.log(`query request: \n${JSON.stringify(request.query, null, '  ')}`)
+
+    return this.run(request).then(response => {
+      debug && console.log(`query response: \n${JSON.stringify(response, null, '  ')}`)
+      return nodeToObject(response.n[0])
+    })
   }
 
   /**
@@ -55,14 +61,18 @@ class DgraphClient {
    * @param object
    * @returns {Promise.<*>}
    */
-  set<T: Object> (object: T): Promise<T & {id: string}> {
+  set<T: Object> (object: T, debug = false): Promise<T & {id: string}> {
     let request = new protos.Request()
 
     let map = []
     request.mutation = toSetMutation(object, map)
 
+    debug && console.log(`set request: \n${JSON.stringify(request.mutation, null, '  ')}`)
+
     return this.run(request)
       .then(response => {
+        debug && console.log(`set response: \n${JSON.stringify(response, null, '  ')}`)
+
         for (let obj of map) {
           if (obj.__tmpId) {
             obj['_uid_'] = response.AssignedUids[obj.__tmpId]
