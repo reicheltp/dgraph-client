@@ -2,10 +2,19 @@
 import protos from './protos'
 import wkx from 'wkx'
 
+function validateStr(str) {
+  for (let idx = 0; idx < str.length; idx += 1){
+    if(str[idx] === '"' &&(idx === 0 || str[idx - 1] !== '\\')){
+      throw new Error('" must be preceded by a \\ in object value')
+    }
+  }
+}
+
 export function setPropertyValue (nquad: protos.NQuad, value: any) {
   switch (typeof value) {
     case 'string':
       nquad.objectType = protos.Posting.ValType.STRING
+      validateStr(value)
       nquad.objectValue = new protos.Value().set('str_val', value)
       break
     case 'number':
@@ -72,11 +81,17 @@ export function toSetMutation (object: {}, map: {}[]) {
       let value = obj[key]
       setPropertyValue(nquad, value)
 
-      if (nquad.objectValue === null && typeof value === 'object') {
+      if (nquad.objectValue !== null)
+      {
+        mutation.set.push(nquad)
+        continue
+      }
+
+      if(typeof value === 'object') {
         if (Array.isArray(value)) {
           for (let idx = 0; idx < value.length; idx += 1) {
             let child = value[idx]
-            let ngChild = new protos.NQuad()
+            let nqChild = new protos.NQuad()
             nqChild.subject = id
             nqChild.predicate = key
             nqChild.objectId = itterObj(child, map, counter + 1)
@@ -86,8 +101,6 @@ export function toSetMutation (object: {}, map: {}[]) {
           nquad.objectId = itterObj(value, map, counter + 1)
           mutation.set.push(nquad)
         }
-      } else {
-        mutation.set.push(nquad)
       }
     }
 
@@ -107,39 +120,21 @@ export function getPropertyValue (prop: protos.Property) {
     case 'uid_val':
       return prop.value[prop.value.val]
     case 'default_val':
-      let val = prop.value[prop.value.val]
-
-      if (val.match(ISO_8601)) {
-        return new Date(val)
-      }
-      try {
-        return JSON.parse(val)
-      } catch (err) {
-        try {
-          // Maybe a geojson so replace ' with " that we can deserialize it
-          return JSON.parse(val.replace(/'/g, '"'))
-        } catch (err) {}
-
-        // obviously a plain string
-        return val
-      }
+      console.log(`recieved a default_val for ${prop.value.val}`)
+      return prop.value[prop.value.val]
     case 'bool_val':
     case 'double_val':
     case 'int_val':
-    // return prop.value[prop.value.val]
+      return prop.value[prop.value.val]
     case 'geo_val':
-    // return wkx.Geometry.parse(prop.value.geo_val).toGeoJSON()
+      return wkx.Geometry.parse(prop.value.geo_val).toGeoJSON()
     case 'str_val':
       // TODO: #33 Use binary format and datetime_val otherwise dates are marked as string
-      // let val = prop.value[prop.value.val]
-      // if (val.match(ISO_8601)) {
-      //   return new Date(val)
-      // }
-      // return val
-
-      throw new Error(
-        'dgraph 0.7.7 returns all values except uid as default_val'
-      )
+      let val = prop.value[prop.value.val]
+      if (val.match(ISO_8601)) {
+        return new Date(val)
+      }
+      return val
     case 'date_val':
     case 'datetime_val':
       throw Error('See #33. We do not support binary datetime for now.')

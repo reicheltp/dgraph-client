@@ -1,3 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`can set and query value string (quotes without backslash) 1`] = `[Error: " must be preceded by a \\ in object value]`;
+
 exports[`client can run a query 1`] = `Object {}`;

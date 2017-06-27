@@ -3,16 +3,12 @@
 
 import DgraphClient from '../src/index'
 
-async function setAndQuery (value, debug = false) {
+async function setAndQuery (obj, debug = false) {
   let client = new DgraphClient('localhost:8080')
-
-  let obj = {
-    value
-  }
 
   await client.set(obj, debug)
 
-  let query = `query { obj(id:${obj._uid_}) { _uid_, value }}`
+  let query = `query { obj(id:${obj._uid_}) { ${Object.keys(obj).join(' ')} }}`
   let { obj: response } = await client.query(query, debug)
 
   expect(response[0]).toEqual(obj)
@@ -30,7 +26,7 @@ describe('client', () => {
 
   it('can run a mutation', async () => {
     let client = new DgraphClient('localhost:8080')
-    let me = { name: 'Paul', size: 1.85 }
+    let me = { name: 'Paul', size: 1.85, skipped: undefined }
 
     let response = await client.set(me)
 
@@ -41,36 +37,45 @@ describe('client', () => {
 })
 
 describe('can set and query value', () => {
-  it('bool (true)', () => setAndQuery(true))
-  it('bool (false)', () => setAndQuery(false))
+  it('bool (true)', () => setAndQuery({ bVal: true }))
+  it('bool (false)', () => setAndQuery({ bVal: false }))
 
-  it('string', () => setAndQuery('Hallo World String!'))
-  //it('string (empty)', () => setAndQuery('', true))
+  it('string', () => setAndQuery({ sVal: 'Hallo World String!' }))
+  it('string (quotes without backslash)', () =>
+    expect(setAndQuery({ sVal: 'Tom says: "Hallo"' }))
+      .rejects.toMatchSnapshot()
+  )
+  it('string (quotes)', () => setAndQuery({ sVal: 'Tom says: \\"Hallo\\"' }))
 
-  it('number', () => setAndQuery(12345))
-  it('number (negative)', () => setAndQuery(-12345))
-  it('number (float)', () => setAndQuery(12.345))
-  it('number (float negative)', () => setAndQuery(-12.345))
+  it('number', () => setAndQuery({ nVal: 12345 }))
+  it('number (negative)', () => setAndQuery({ nVal: -12345 }))
+  it('number (float)', () => setAndQuery({ nVal: 12.345 }))
+  it('number (float negative)', () => setAndQuery({ nVal: -12.345 }))
 
   it('geo json (point)', () =>
     setAndQuery({
-      type: 'Point',
-      coordinates: [9.3603515625, 51.6180165487737]
+      geoVal: {
+        type: 'Point',
+        coordinates: [9.3603515625, 51.6180165487737]
+      }
     }))
   it('geo json (polygon)', () =>
     setAndQuery({
-      type: 'Polygon',
-      coordinates: [
-        [
-          [10.711669921874998, 51.97134580885172],
-          [12.76611328125, 51.97134580885172],
-          [12.76611328125, 53.16982647814065],
-          [10.711669921874998, 53.16982647814065],
-          [10.711669921874998, 51.97134580885172]
+      geoVal: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [10.711669921874998, 51.97134580885172],
+            [12.76611328125, 51.97134580885172],
+            [12.76611328125, 53.16982647814065],
+            [10.711669921874998, 53.16982647814065],
+            [10.711669921874998, 51.97134580885172]
+          ]
         ]
-      ]
+      }
     }))
 
-  it('date', () => setAndQuery(new Date(2017, 8, 23)))
-  it('datetime', () => setAndQuery(new Date(2017, 8, 23, 12, 23, 12)))
+  it('date', () => setAndQuery({ dateVal: new Date(2017, 8, 23) }))
+  it('datetime', () =>
+    setAndQuery({ dateVal: new Date(2017, 8, 23, 12, 23, 12) }))
 })
